@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views import View
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, authenticate
+from django.http import HttpResponseRedirect
 
 class Index(View):
     template = 'index.html'
@@ -26,4 +27,4 @@ class Login(View):
             login(request, user)
             return HttpResponseRedirect('/')
         else:
-            return render(request, self.template, {'form': form})
+            return render(request, self.template, {'form': form, "error":"no_user"})
