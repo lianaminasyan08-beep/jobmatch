@@ -1,0 +1,51 @@
+main {
+    padding: 8px;
+}
+main p, main h2 {
+    margin: 8px 0px;
+}
+
+.card {
+    margin: 8px 0px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 15px;
+    border: 1px solid #0000005E;
+}
+
+.dualpane {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+
+.card ul {
+   list-style-position: inside;
+}
+
+@property --progress-value {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@property --progress-initial-value {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+.progress-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: 
+    radial-gradient(closest-side, white 79%, transparent 80% 100%),
+    conic-gradient(#0A714E calc(var(--progress-initial-value) * 1%), #F3F2F2 0);
+  animation: progress 2s 1 forwards;
+}

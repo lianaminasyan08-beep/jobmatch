@@ -1,22 +1,37 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'resume.css' %}">
+{% endblock %}
 
 {% block title %}Resume{% endblock %}
 
 {% block body %}
-    <h1>Resume analyzer</h1>
-    {% if error %}
-        <p class="error">{{result.error}}</p>
-    {% else %}
-        <p>Temporary page</p>
-        <h1>{{result.score}}</h1>
-        <p>out of 100</p>
-        <h2>Reasons from AI</h2>
-        <p>{{result.reason}}</p>
-        <h2>Suggestions</h2>
-        <ul>
-        {% for rc in result.recommendations %}
-            <li>{{rc}}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
+    <main class="resan">
+        {% if error %}
+            <p class="error">{{result.error}}</p>
+        {% else %}
+            <div class="card dualpane">
+                <div class="progress-bar" style="--progress-initial-value: {{result.score}};"></div>
+                <div>
+                    <p>Your resume scores:</p>
+                    <h1>{{result.score}}</h1>
+                    <p>out of 100</p>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Reasons from AI</h2>
+                <p>{{result.reason}}</p>
+            </div>
+            <div class="card">
+                <h2>Suggestions</h2>
+                <ul>
+                {% for rc in result.recommendations %}
+                    <li>{{rc}}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </main>
 {% endblock %}
