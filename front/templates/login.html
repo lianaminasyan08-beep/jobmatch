@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block links %}
+<script>
+    window.onload = function() {
+        document.getElementById("id_username").classList.add("form-control");
+        document.getElementById("id_password").classList.add("form-control");
+        document.getElementById("id_username").placeholder = "Username";
+        document.getElementById("id_password").placeholder = "Password";
+        document.getElementById("id_username").type = "text";
+        document.getElementById("id_password").type = "password";
+        document.getElementById("id_username").required = "required";
+        document.getElementById("id_password").required = "required";
+        document.getElementById("id_username").autofocus = "autofocus";
+    }
+</script>
+{% endblock %}
+
+{% block body %}
+<h1>Login</h1>
+<form method="post" action="/login">
+    {% csrf_token %}
+    {% if error %}
+        <p class="error">{{error}}</p>
+    {% endif %}
+    <div class="form-group">
+        <div class="form-label-group">
+        {{ form.username }}
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-label-group">
+        {{ form.password }}
+        </div>
+    </div>
+<button class="btn btn-primary btn-block" type="submit">Login</button>
+{% endblock %}
