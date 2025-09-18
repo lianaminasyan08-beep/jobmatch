@@ -65,14 +65,13 @@ def analyze_resume_with_gemini(path, job):
                             "suggestions": {"type":"array","items":{"type": "string"}}
                         }
                     }},
+                    "error": {"type": "boolean"},
                     "recommendations": {"type":"array","items":{"type": "string"}}
                 },
             },
             temperature = 0.2
         ),
     )
-    if response.text.startswith("ResumeFail:"):
-        raise ValueError(response.text)
     return response.text
 
 def analyze_resume(request):
