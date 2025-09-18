@@ -37,23 +37,20 @@ def login_view(request):
 from google import genai
 from google.genai.types import GenerateContentConfig, HttpOptions
 from os import environ, path
-from .ai import RESUME_SYS
+from .ai import RESUME_SYS, RESUME_SYS_NO_JD
 from .mock import MOCK_RESPONSE
+import json
+
+# Set the model to Gemini 1.5 Pro.
+client = genai.Client(api_key=environ["GEMINI_AK"])
 
 def analyze_resume_with_gemini(fpath, job):
-    return MOCK_RESPONSE
-    # Set the model to Gemini 1.5 Pro.
-    client = genai.Client(api_key=environ["GEMINI_AK"])
-
-    # Upload the file
-    sample_file = client.files.upload(file=fpath)
-
-    print(f"Uploaded file '{sample_file.display_name}' as: {sample_file.uri}")
+    sample_file = client.files.get(name=fpath)
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=[job, sample_file],
+        contents=[(job if job != None else "No description"), sample_file],
         config=GenerateContentConfig(
-            system_instruction=RESUME_SYS.split("\n"),
+            system_instruction=(RESUME_SYS if job != None else RESUME_SYS_NO_JD).split("\n"),
             response_mime_type = "application/json",
             response_schema = {
                 "type": "object",
@@ -134,16 +131,45 @@ Optional, but encouraged:
 Apply by September 26.
 """
 
+from .forms import UploadResumeForm
+import tempfile
+
+FILE_OWNERS: dict[str, str] = {}
+
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
 
+# password change
 @login_required
-def analyzer_ui(request):
+def analyze_ui(request):
+    if request.method == "POST":
+        form = UploadResumeForm(request.POST, request.FILES)
+        if form.is_valid():
+            # download the file to a temp file
+            temp = tempfile.NamedTemporaryFile(suffix='.pdf').name
+            with open(temp, "wb") as f:
+                for chunk in request.FILES["file"].chunks():
+                    f.write(chunk)
+            # Upload the file to gemini
+            sample_file = client.files.upload(file=temp)
+            # Save the gemini file
+            FILE_OWNERS[sample_file.name] = request.user.email
+            return redirect("/analyze/" + sample_file.name.replace("files/", ""))
+    else:
+        form = UploadResumeForm()
+    return render(request, "resume_upload.html", {"form": form})
+
+@login_required
+def analyze_process_ui(request, id):
+    filename = "files/" + id
+    if not filename in FILE_OWNERS:
+        return redirect("/analyze")
+    if FILE_OWNERS[filename] != request.user.email:
+        return redirect("/analyze")
     result = analyze_resume_with_gemini(
-        "/home/meow/Documents/test_resume.pdf",
-        JOB
+        filename,
+        None
     )
     print(result)
     return render(request, 'resume.html', {"result": result})
-
