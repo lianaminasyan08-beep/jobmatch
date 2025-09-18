@@ -3,6 +3,7 @@ from django.views import View
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, authenticate
 from django.http import HttpResponseRedirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class Index(View):
     template = 'index.html'
@@ -28,3 +29,11 @@ class Login(View):
             return HttpResponseRedirect('/')
         else:
             return render(request, self.template, {'form': form, "error":"no_user"})
+
+
+class Resume(LoginRequiredMixin, View):
+    template = 'resume.html'
+    login_url = '/login/'
+
+    def get(self, request):
+        return render(request, self.template)
