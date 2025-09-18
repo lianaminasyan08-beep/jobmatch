@@ -2,3 +2,6 @@ asgiref==3.9.1
 Django==5.2.6
 djangorestframework==3.16.1
 sqlparse==0.5.3
+celery==5.5.3
+python_dotenv=1.1.1
+google-genai
