@@ -1,6 +1,6 @@
 MOCK_RESPONSE = {
   "score": 57,
-  "reason": "The candidate demonstrates foundational Android development skills and some relevant experience, but falls short on the required years for a Senior role, lacks specific technical requirements like Coil, and needs to quantify achievements for senior-level impact.",
+  "reason": "(Mock response) The candidate demonstrates foundational Android development skills and some relevant experience, but falls short on the required years for a Senior role, lacks specific technical requirements like Coil, and needs to quantify achievements for senior-level impact.",
   "details": [
     {
       "subscore": 55,
@@ -72,6 +72,7 @@ MOCK_RESPONSE = {
   ],
   "error": False,
   "recommendations": [
+    "(Mock response - enable real ai before launching)",
     "Quantify achievements with specific metrics (e.g., user numbers, performance improvements, revenue impact) to demonstrate senior-level impact.",
     "Explicitly mention experience with 'Coil' and 'Kotlin Coroutines', or gain familiarity if lacking, as these are key requirements.",
     "Reformat the resume to a standard, ATS-friendly text-based layout, removing the avatar and infographic elements to ensure parseability.",
