@@ -40,11 +40,18 @@ from os import environ, path
 from .ai import RESUME_SYS, RESUME_SYS_NO_JD
 from .mock import MOCK_RESPONSE
 import json
+from celery import shared_task
 
 # Set the model to Gemini 1.5 Pro.
 client = genai.Client(api_key=environ["GEMINI_AK"])
 
 def analyze_resume_with_gemini(fpath, job):
+    import time
+    print('"thinking..."')
+    time.sleep(3)
+    print('"generated" response')
+    return MOCK_RESPONSE
+
     sample_file = client.files.get(name=fpath)
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -103,6 +110,7 @@ def change_password(request):
     return render(request, 'change_password.html', {'form': form})
 
 from django.contrib.auth.decorators import login_required
+from .models import Resume
 
 JOB = """
 Senior Android Developer
@@ -134,11 +142,24 @@ Apply by September 26.
 from .forms import UploadResumeForm
 import tempfile
 
-FILE_OWNERS: dict[str, str] = {}
+RESUME_PKS: dict[str, int] = {}
+
+import uuid
 
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
+
+@shared_task
+def upload_and_analyze_resume(pk):
+    resume = Resume.objects.get(pk=pk)
+    # Upload the file to gemini
+    sample_file = client.files.upload(file=resume.file.path)
+    # run gemini
+    analysis = analyze_resume_with_gemini(sample_file.name, None)
+    # save the result
+    resume.analysis = analysis
+    resume.save()
 
 # password change
 @login_required
@@ -146,30 +167,27 @@ def analyze_ui(request):
     if request.method == "POST":
         form = UploadResumeForm(request.POST, request.FILES)
         if form.is_valid():
-            # download the file to a temp file
-            temp = tempfile.NamedTemporaryFile(suffix='.pdf').name
-            with open(temp, "wb") as f:
-                for chunk in request.FILES["file"].chunks():
-                    f.write(chunk)
-            # Upload the file to gemini
-            sample_file = client.files.upload(file=temp)
-            # Save the gemini file
-            FILE_OWNERS[sample_file.name] = request.user.email
-            return redirect("/analyze/" + sample_file.name.replace("files/", ""))
+            resume = Resume.objects.create(
+                user=request.user,
+                file=request.FILES["file"]
+            )
+            # once the object is created, analyze it
+            upload_and_analyze_resume.delay_on_commit(resume.pk)
+            return redirect("/analyze/" + str(resume.pk))
     else:
         form = UploadResumeForm()
     return render(request, "resume_upload.html", {"form": form})
 
 @login_required
 def analyze_process_ui(request, id):
-    filename = "files/" + id
-    if not filename in FILE_OWNERS:
-        return redirect("/analyze")
-    if FILE_OWNERS[filename] != request.user.email:
-        return redirect("/analyze")
-    result = analyze_resume_with_gemini(
-        filename,
-        None
-    )
-    print(result)
-    return render(request, 'resume.html', {"result": result})
+    try:
+        resume = Resume.objects.get(pk=id)
+
+        if resume.user.email != request.user.email:
+            return redirect("/analyze")
+        if resume.analysis == None:
+            return render(request, 'resume_await.html')
+
+        return render(request, 'resume.html', {"result": resume.analysis})
+    except Resume.DoesNotExist:
+        return redirect("/analyze/")
