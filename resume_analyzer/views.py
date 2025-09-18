@@ -45,7 +45,7 @@ from celery import shared_task
 # Set the model to Gemini 1.5 Pro.
 client = genai.Client(api_key=environ["GEMINI_AK"])
 
-MOCK_AI = not "GEMINI_AK" in environ
+MOCK_AI = "TRUMPET_MOCK_AI" in environ or not "GEMINI_AK" in environ
 
 def analyze_resume_with_gemini(fpath, job):
     if MOCK_AI:
@@ -156,7 +156,7 @@ def dashboard(request):
 @shared_task
 def upload_and_analyze_resume(pk):
     resume = Resume.objects.get(pk=pk)
-    if "GEMINI_AK" in environ:
+    if not MOCK_AI:
         # Upload the file to gemini
         sample_file = client.files.upload(file=resume.file.path)
     # run gemini
