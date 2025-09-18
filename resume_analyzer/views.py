@@ -40,22 +40,38 @@ from os import environ
 from .ai import RESUME_SYS
 
 def analyze_resume_with_gemini(path, job):
+    # Set the model to Gemini 1.5 Pro.
+    client = genai.Client(api_key=environ["GEMINI_AK"])
+
     # Upload the file
-    sample_file = genai.upload_file(path=path,
-                                display_name="Resume")
+    sample_file = client.files.upload(file=path)
 
     print(f"Uploaded file '{sample_file.display_name}' as: {sample_file.uri}")
-
-    # Set the model to Gemini 1.5 Pro.
-    client = genai.Client(api_key=environ["GEMINI_AK"], http_options=HttpOptions(api_version="v1"))
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=job,
         config=GenerateContentConfig(
-            system_instruction=RESUME_SYS.split("\n")
+            system_instruction=RESUME_SYS.split("\n"),
+            response_mime_type = "application/json",
+            response_schema = {
+                "type": "object",
+                "properties": {
+                    "score": {"type": "integer"},
+                    "reason": {"type": "string"},
+                    "details": {"type":"array","items":{"type": "object",
+                        "properties": {
+                            "subscore": {"type": "integer"},
+                            "reason": {"type":"array","items":{"type": "string"}},
+                            "suggestions": {"type":"array","items":{"type": "string"}}
+                        }
+                    }},
+                    "recommendations": {"type":"array","items":{"type": "string"}}
+                },
+            },
+            temperature = 0.2
         ),
     )
-    if (response.text.startswith("ResumeFail:")):
+    if response.text.startswith("ResumeFail:"):
         raise ValueError(response.text)
     return response.text
 
@@ -124,7 +140,7 @@ def dashboard(request):
 @login_required
 def analyzer_ui(request):
     result = analyze_resume_with_gemini(
-        "~/Documents/test_resume.pdf",
+        "/home/meow/Documents/test_resume.pdf",
         JOB
     )
     print(result)
