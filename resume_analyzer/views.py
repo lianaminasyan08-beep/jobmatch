@@ -38,6 +38,7 @@ from google import genai
 from google.genai.types import GenerateContentConfig, HttpOptions
 from os import environ, path
 from .ai import RESUME_SYS
+from .mock import MOCK_RESPONSE
 
 def analyze_resume_with_gemini(fpath, job):
     return MOCK_RESPONSE
