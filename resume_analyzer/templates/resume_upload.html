@@ -1,12 +1,26 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'resume-upload.css' %}">
+  <link rel="stylesheet" href="{% static 'resume.css' %}">
+{% endblock %}
 
 {% block title %}Resume{% endblock %}
 
 {% block body %}
-    <h1>Upload resume</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="file">
-        <button type="submit">Upload</button>
-    </form>
+    <main class="upload">
+        <h1>Analyze resume</h1>
+        <p>Our AI will check your resume and grade it based on how well it corresponds to standards and how easy it is to understand.</p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="images" class="drop-container" id="dropcontainer">
+                <span class="drop-title">Drop files here</span>
+                or
+                <input type="file" id="images" accept="document/pdf" required>
+            </label>
+            <button type="submit">Upload</button>
+        </form>
+        <p>Note: scores are estimations shown for informative purpose only. Trumpet makes no guarantee of a successful job application even if a resume has a high grade.</p>
+    </main>
 {% endblock %}
