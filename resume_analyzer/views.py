@@ -45,12 +45,15 @@ from celery import shared_task
 # Set the model to Gemini 1.5 Pro.
 client = genai.Client(api_key=environ["GEMINI_AK"])
 
+MOCK_AI = False
+
 def analyze_resume_with_gemini(fpath, job):
-    import time
-    print('"thinking..."')
-    time.sleep(3)
-    print('"generated" response')
-    return MOCK_RESPONSE
+    if MOCK_AI:
+        import time
+        print('"thinking..."')
+        time.sleep(3)
+        print('"generated" response')
+        return MOCK_RESPONSE
 
     sample_file = client.files.get(name=fpath)
     response = client.models.generate_content(
