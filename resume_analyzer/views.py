@@ -41,23 +41,30 @@ def login_view(request):
 from google import genai
 from google.genai.types import GenerateContentConfig, HttpOptions
 from os import environ, path
-from .ai import RESUME_SYS
+from .ai import RESUME_SYS, RESUME_SYS_NO_JD
 from .mock import MOCK_RESPONSE
+import json
+from celery import shared_task
+
+# Set the model to Gemini 1.5 Pro.
+client = genai.Client(api_key=environ["TRUMPET_GEMINI_AK"])
+
+MOCK_AI = "TRUMPET_MOCK_AI" in environ or not "TRUMPET_GEMINI_AK" in environ
 
 def analyze_resume_with_gemini(fpath, job):
-    return MOCK_RESPONSE
-    # Set the model to Gemini 1.5 Pro.
-    client = genai.Client(api_key=environ["GEMINI_AK"])
+    if MOCK_AI:
+        import time
+        print('"thinking..."')
+        time.sleep(3)
+        print('"generated" response')
+        return MOCK_RESPONSE
 
-    # Upload the file
-    sample_file = client.files.upload(file=fpath)
-
-    print(f"Uploaded file '{sample_file.display_name}' as: {sample_file.uri}")
+    sample_file = client.files.get(name=fpath)
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=[job, sample_file],
+        contents=[(job if job != None else "No description"), sample_file],
         config=GenerateContentConfig(
-            system_instruction=RESUME_SYS.split("\n"),
+            system_instruction=(RESUME_SYS if job != None else RESUME_SYS_NO_JD).split("\n"),
             response_mime_type = "application/json",
             response_schema = {
                 "type": "object",
@@ -110,6 +117,7 @@ def change_password(request):
     return render(request, 'change_password.html', {'form': form})
 
 from django.contrib.auth.decorators import login_required
+from .models import Resume
 
 JOB = """
 Senior Android Developer
@@ -138,16 +146,56 @@ Optional, but encouraged:
 Apply by September 26.
 """
 
+from .forms import UploadResumeForm
+import tempfile
+
+RESUME_PKS: dict[str, int] = {}
+
+import uuid
+
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
 
-@login_required
-def analyzer_ui(request):
-    result = analyze_resume_with_gemini(
-        "/home/meow/Documents/test_resume.pdf",
-        JOB
-    )
-    print(result)
-    return render(request, 'resume.html', {"result": result})
+@shared_task
+def upload_and_analyze_resume(pk):
+    resume = Resume.objects.get(pk=pk)
+    if not MOCK_AI:
+        # Upload the file to gemini
+        sample_file = client.files.upload(file=resume.file.path)
+    # run gemini
+    analysis = analyze_resume_with_gemini(sample_file.name, None)
+    # save the result
+    resume.analysis = analysis
+    resume.save()
 
+# password change
+@login_required
+def analyze_ui(request):
+    if request.method == "POST":
+        form = UploadResumeForm(request.POST, request.FILES)
+        if form.is_valid():
+            resume = Resume.objects.create(
+                user=request.user,
+                file=request.FILES["file"]
+            )
+            # once the object is created, analyze it
+            upload_and_analyze_resume.delay_on_commit(resume.pk)
+            return redirect("/analyze/" + str(resume.pk))
+    else:
+        form = UploadResumeForm()
+    return render(request, "resume_upload.html", {"form": form})
+
+@login_required
+def analyze_process_ui(request, id):
+    try:
+        resume = Resume.objects.get(pk=id)
+
+        if resume.user.email != request.user.email:
+            return redirect("/analyze")
+        if resume.analysis == None:
+            return render(request, 'resume_await.html')
+
+        return render(request, 'resume.html', {"result": resume.analysis})
+    except Resume.DoesNotExist:
+        return redirect("/analyze/")

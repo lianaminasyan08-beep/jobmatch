@@ -14,14 +14,33 @@
   <title>{% block title %}{% endblock %}</title>
 
   <!-- Custom fonts for this template-->
-  <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="{% static 'style.css' %}">
 
   {% block links %}
   {% endblock %}
 
 </head>
-
-{% block body %}
-{% endblock %}
+<body>
+  <nav class="navbar">
+    <div class="logo-container">
+        <img src="{% static 'Tr.png' %}" alt="logo" class="logo">
+    </div>
+    <div class="search-container">
+      <input type="text" placeholder="Search..." class="search-input">
+      <button class="search-button">search</button>
+    </div>
+    <ul class="menu">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Networking</a></li>
+        <li><a href="#">Messaging</a></li>
+        <li><a href="#">Jobs</a></li>
+        <li><a href="#">video</a></li>
+        <li><a href="#">Notification</a></li>
+        <li><a href="#">More</a></li>
+    </ul>
+  </nav>
+  {% block body %}
+  {% endblock %}
+</body>
 
 </html>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'resume.css' %}">
+{% endblock %}
+
+{% block title %}Resume{% endblock %}
+
+{% block body %}
+<main class="await">
+    <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    <p>Our AI is analyzing your resume.</p>
+    <script>
+        setTimeout(function() {
+            // reload the current page
+            window.location.reload();
+        }, 5000);
+    </script>
+</main>
+{% endblock %}
