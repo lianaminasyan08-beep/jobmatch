@@ -40,6 +40,7 @@ from os import environ, path
 from .ai import RESUME_SYS
 
 def analyze_resume_with_gemini(fpath, job):
+    return MOCK_RESPONSE
     # Set the model to Gemini 1.5 Pro.
     client = genai.Client(api_key=environ["GEMINI_AK"])
 
