@@ -1,6 +1,5 @@
 .logo {
     width:100px;
-    height:130 px;
 }
 
 body{
@@ -25,11 +24,6 @@ body{
     justify-content: space-between;
     background-color: white;
     padding: 10px 20px;
-}
-
-
-.logo {
-    height: 80px;
 }
 
 /* Search bar */
