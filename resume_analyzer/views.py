@@ -36,20 +36,20 @@ def login_view(request):
 
 from google import genai
 from google.genai.types import GenerateContentConfig, HttpOptions
-from os import environ
+from os import environ, path
 from .ai import RESUME_SYS
 
-def analyze_resume_with_gemini(path, job):
+def analyze_resume_with_gemini(fpath, job):
     # Set the model to Gemini 1.5 Pro.
     client = genai.Client(api_key=environ["GEMINI_AK"])
 
     # Upload the file
-    sample_file = client.files.upload(file=path)
+    sample_file = client.files.upload(file=fpath)
 
     print(f"Uploaded file '{sample_file.display_name}' as: {sample_file.uri}")
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=job,
+        contents=[job, sample_file],
         config=GenerateContentConfig(
             system_instruction=RESUME_SYS.split("\n"),
             response_mime_type = "application/json",
@@ -143,5 +143,5 @@ def analyzer_ui(request):
         JOB
     )
     print(result)
-    return render(request, 'resume.html', result)
+    return render(request, 'resume.html', {"result": result})
 
