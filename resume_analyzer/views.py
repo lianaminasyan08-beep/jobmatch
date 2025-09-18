@@ -74,7 +74,7 @@ def analyze_resume_with_gemini(fpath, job):
             temperature = 0.2
         ),
     )
-    return response.text
+    return json.loads(response.text)
 
 def analyze_resume(request):
     sample_cv = {
