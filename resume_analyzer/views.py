@@ -3,6 +3,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import logout
 
+
+def portfolio_view(request):
+    return render(request, 'portfolio.html')
+
 def signup(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
